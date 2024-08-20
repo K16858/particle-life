@@ -2,6 +2,7 @@ let canvas,graphic,CWidth,CHeight;
 let particles = [];
 let random_numbers = [];
 let yellow = [], red = [], blue = [], green = [];
+let all_particle = [];
 
 onload = function(){
     canvas = document.getElementById("simulator");
@@ -20,12 +21,15 @@ function init(){
 
     yellow = create(200, "yellow");
     red = create(200, "red");
-    blue = create(100,"blue");
-    green = create(150,"green");
+    blue = create(200,"blue");
+    green = create(200,"green");
+    purple = create(200,"purple");
+    orange = create(200,"orange")
 
-    random_numbers = random_g(16);
+    let n = (all_particle.length)*(all_particle.length)
+    random_numbers = random_g(n);
     console.log(random_numbers);
-    console.log(particles)
+    console.log(all_particle)
 }
 
 function particle(x,y,c){
@@ -37,15 +41,15 @@ function draw(x,y,c,s){
     graphic.fillRect(x,y,s,s);
 }
 
-function random(){
-    return Math.random()*400+50;
+function random(n){
+    return Math.random()*n;
 }
 
 function random_g(n){
     let output_numbers = [];
     for(let i=0;i<n;i++){
-        let number = [-2,-1,-0.5,-0.1,0,0.1,0.5,1,2];
-        let r = Math.floor(Math.random()*8);
+        let number = [-0.2,-0.1,-0.5,-0.1,-0.3,0.1,0.5,0.1,0.2];
+        let r = Math.floor(Math.random()*(number.length-1));
         output_numbers.push(number[r]);
     }
     return output_numbers;
@@ -54,15 +58,17 @@ function random_g(n){
 function create(number, color){
     group = [];
     for(let i=0;i<number;i++){
-        group.push(particle(random(), random(), color));
+        group.push(particle(random(CWidth), random(CHeight), color));
         particles.push(group[i]);
     }
+    all_particle.push(group)
 
     return group;
 }
 
 function rule(particle1, particle2, G){
     let fx,fy,a,b,dx,dy,d,F;
+    const maxSpeed = 10;
     for(let i=0;i<particle1.length;i++){
         fx = 0;
         fy = 0;
@@ -72,50 +78,51 @@ function rule(particle1, particle2, G){
             dx = a.x - b.x;
             dy = a.y - b.y;
             d = Math.sqrt(dx*dx + dy*dy)
-            if(d>0 && d<80){
+            if(d>5 && d<40){
                 F = G * 1/d;
                 fx += (F * dx);
                 fy += (F * dy);
             }
+            else if(d<=5){
+                F = 0.3 * d;
+                fx += (F * dx);
+                fy += (F * dy);
+            }
         }
-        a.vx = (a.vx + fx)*0.5;
-        a.vy = (a.vy + fy)*0.5;
-        a.x += a.vx;
-        a.y += a.vy;
-        if(a.x<0||a.x>CWidth){
-            a.vx *= -10;
+        a.vx = (a.vx + fx)*0.2;
+        a.vy = (a.vy + fy)*0.2;
+
+        const speed = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
+        if (speed > maxSpeed) {
+            const scale = maxSpeed / speed;
+            a.vx *= scale;
+            a.vy *= scale;
         }
-        if(a.y<0||a.y>CHeight){
-            a.vy *= -10;
+
+        // トーラス効果: 画面外に出たら反対側に移動させる
+        if(d>10 ){
+            a.x = (a.x + a.vx + CWidth) % CWidth;
+            a.y = (a.y + a.vy + CHeight) % CHeight;
         }
     }
 }
 
-function random_rules(){
-    rule(yellow,yellow,random_numbers[0]);
-    rule(red,red,random_numbers[1]);
-    rule(blue,blue,random_numbers[2]);
-    rule(green,green,random_numbers[3]);
-    rule(green,yellow,random_numbers[4]);
-    rule(red,yellow,random_numbers[5]);
-    rule(yellow,red,random_numbers[6]);
-    rule(blue,red,random_numbers[7]);
-    rule(blue,yellow,random_numbers[8]);
-    rule(red,blue,random_numbers[9]);
-    rule(yellow,blue,random_numbers[10]);
-    rule(green,red,random_numbers[11]);
-    rule(green,blue,random_numbers[12]);
-    rule(red,green,random_numbers[13]);
-    rule(blue,green,random_numbers[14]);
-    rule(yellow,green,random_numbers[15]);
+function create_rule(all_particle){
+    let n=0
+    for(let i=0;i<all_particle.length;i++){
+        for(let j=0;j<all_particle.length;j++){
+            rule(all_particle[i],all_particle[j],random_numbers[n])
+            n++;
+        }
+    }
 }
 
 function update(){
-    random_rules()
+    create_rule(all_particle)
     graphic.clearRect(0,0,CWidth,CHeight);
     draw(0,0,"black",800);
     for(let i=0;i<particles.length;i++){
-        draw(particles[i].x, particles[i].y, particles[i].color, 5);
+        draw(particles[i].x, particles[i].y, particles[i].color, 2.5);
     }
 }
 
