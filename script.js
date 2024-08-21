@@ -19,9 +19,9 @@ function init(){
     
     particles = [];
 
-    yellow = create(200, "yellow");
-    red = create(200, "red");
-    blue = create(200,"blue");
+    yellow = create(300, "yellow");
+    red = create(300, "red");
+    blue = create(300,"blue");
     green = create(200,"green");
     purple = create(200,"purple");
     orange = create(200,"orange")
@@ -68,7 +68,6 @@ function create(number, color){
 
 function rule(particle1, particle2, G){
     let fx,fy,a,b,dx,dy,d,F;
-    const maxSpeed = 10;
     for(let i=0;i<particle1.length;i++){
         fx = 0;
         fy = 0;
@@ -92,18 +91,15 @@ function rule(particle1, particle2, G){
         a.vx = (a.vx + fx)*0.2;
         a.vy = (a.vy + fy)*0.2;
 
-        const speed = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
-        if (speed > maxSpeed) {
-            const scale = maxSpeed / speed;
-            a.vx *= scale;
-            a.vy *= scale;
+        if(a.x<0||a.x>CWidth){
+            a.vx *= -100;
+        }
+        if(a.y<0||a.y>CHeight){
+            a.vy *= -100;
         }
 
-        // トーラス効果: 画面外に出たら反対側に移動させる
-        if(d>10 ){
-            a.x = (a.x + a.vx + CWidth) % CWidth;
-            a.y = (a.y + a.vy + CHeight) % CHeight;
-        }
+        a.x += a.vx;
+        a.y += a.vy;
     }
 }
 
